@@ -20,15 +20,18 @@ spec:
           artifacts.developer.gov.bc.ca/docker-remote/osgeo/gdal:alpine-normal-3.4.1
         # osgeo/gdal:alpine-normal-3.4.1
         #command: ["ogrinfo",  "--formats"]
-        command: ["sh",  "/data/nr-water-notations/jobs/demogdal.sh"]
+        command: ["sh",  "/data/demogdal.sh"]
         volumeMounts:
         - name: demojob-volume
           mountPath: /data
       initContainers:
+      # could use ephemeral storage for this
       - name: config-data
         image: >-
-          artifacts.developer.gov.bc.ca/docker-remote/alpine/git:v2.32.0
-        command: ["git","clone","https://github.com/bcgov/nr-water-notations","/data/nr-water-notations"]
+          artifacts.developer.gov.bc.ca/docker-remote/curlimages/curl:7.81.0
+        #docker pull busybox:1.35.0
+        #  artifacts.developer.gov.bc.ca/docker-remote/alpine/git:v2.32.0
+        command: ["curl","https://github.com/bcgov/nr-water-notations/edit/main/jobs/demogdal.sh","-o","/data/demogdal.sh"]
         #command: ["ls","/data"]
         volumeMounts:
         - name: demojob-volume
