@@ -99,7 +99,11 @@ postgresdb_params:
   database_password: password123abc
   database_user: waternote-db-user
   database_pvc_name: waternote-pvc
-  database_pvc_size: "27Gi"
+  database_pvc_size: "25Gi"
   database_port: 5432
 
 artifactory_secret_name: artifacts-pull-artifacts-default-nncfox
+
+demojob:
+  demojob_pvc_name: demojob-pvc
+  demojob_pvc_size: "1Gi"

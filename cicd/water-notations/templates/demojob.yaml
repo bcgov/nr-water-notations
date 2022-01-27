@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: demo-job
+spec:
+  ttlSecondsAfterFinished: 100
+  template:
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.artifactory_secret_name }}
+      volumes:
+      - name: demojob-volume
+        persistentVolumeClaim:
+          claimName: {{ .Values.demojob.demojob_pvc_name }}
+      containers:
+      - name: demogdal
+        # If you need more functionality not included in this image there are a
+        # bunch of others
+        image: >-
+          artifacts.developer.gov.bc.ca/docker-remote/osgeo/gdal:alpine-normal-3.4.1
+        # osgeo/gdal:alpine-normal-3.4.1
+        #command: ["ogrinfo",  "--formats"]
+        command: ["sh",  "/data/nr-water-notations/jobs/demogdal.sh"]
+        volumeMounts:
+        - name: demojob-volume
+          mountPath: /data
+      initContainers:
+      - name: config-data
+        image: >-
+          artifacts.developer.gov.bc.ca/docker-remote/alpine/git:v2.32.0
+        command: ["git","clone","https://github.com/bcgov/nr-water-notations","/data/nr-water-notations"]
+        #command: ["ls","/data"]
+        volumeMounts:
+        - name: demojob-volume
+          mountPath: /data
+      restartPolicy: Never

@@ -1,0 +1,2 @@
+ogrinfo --formats
+gdalinfo --formats
