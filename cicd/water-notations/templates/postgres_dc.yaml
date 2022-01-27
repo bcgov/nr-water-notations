@@ -1,0 +1,124 @@
+kind: DeploymentConfig
+apiVersion: apps.openshift.io/v1
+metadata:
+  annotations:
+    template.alpha.openshift.io/wait-for-ready: 'true'
+  generation: 4
+  labels:
+    template: postgresql-persistent-template
+    name: {{ .Values.app_name }}-postgres-dc
+    app: {{ .Values.app_name }}
+    role: {{ .Values.label_database_role }}
+    env: {{ .Values.env }}
+  name: {{ .Values.app_name }}-postgres-dc
+spec:
+  replicas: 1
+  selector:
+    app: {{ .Values.app_name }}
+    deploymentconfig: {{ .Values.app_name }}-postgres-dc
+  strategy:
+    activeDeadlineSeconds: 21600
+    recreateParams:
+      timeoutSeconds: 600
+    resources: {}
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        name: {{ .Values.app_name }}-postgres-db
+        app: {{ .Values.app_name }}
+        role: {{ .Values.label_database_role }}
+        env: {{ .Values.env }}
+        deploymentconfig: {{ .Values.app_name }}-postgres-dc
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.artifactory_secret_name }}
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: /var/lib/postgresql/data
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  key: database-user
+                  name: {{ .Values.postgresdb_params.database_secret_name }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: database-password
+                  name: {{ .Values.postgresdb_params.database_secret_name }}
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  key: database-name
+                  name: {{ .Values.postgresdb_params.database_secret_name }}
+          image: >-
+            artifacts.developer.gov.bc.ca/docker-remote/postgis/postgis:14-3.2-alpine
+          # docker-remote/postgis/
+          # https://artifacts.developer.gov.bc.ca/artifactory/docker-remote/postgis
+          # registry.redhat.io/rhel8/postgresql-13@sha256:f32fabe87b62765738a0a95b3b9ba3a009481ce3de9b351e7b4e14580b68a381
+          # docker-registry.default.svc:5000/openshift/postgresql@sha256:d740d4960134a692d4d4a19a04c191b563a9cebc4f3dea04e92ae47d08e03451
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - '-i'
+                - '-c'
+                - pg_isready -h 127.0.0.1 -p 5432
+            failureThreshold: 3
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: postgresql
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - '-i'
+                - '-c'
+                - >-
+                  psql -h 127.0.0.1 -U $POSTGRES_USER --port=5432 -q -d
+                  $POSTGRES_DB -c 'SELECT 1' $POSTGRES_PASSWORD
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              memory: 512Mi
+          securityContext:
+            capabilities: {}
+            privileged: false
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          #/var/lib/postgresql
+            - mountPath: /var/lib/postgresql
+              name: postgresql-volume
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 10
+      volumes:
+        - name: postgresql-volume
+          persistentVolumeClaim:
+            claimName: {{ .Values.postgresdb_params.database_pvc_name }}
+  test: false
+  # triggers:
+  #   - imageChangeParams:
+  #       automatic: true
+  #       containerNames:
+  #         - postgresql
+  #       from:
+  #         kind: ImageStreamTag
+  #         name: 'postgresql-13:1-21'
+  #     type: ImageChange
+  #   - type: ConfigChange

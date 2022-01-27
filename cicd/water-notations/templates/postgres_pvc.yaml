@@ -1,0 +1,18 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  annotations:
+    volume.beta.kubernetes.io/storage-provisioner: csi.trident.netapp.io
+  finalizers:
+  - kubernetes.io/pvc-protection
+  name: {{ .Values.postgresdb_params.database_pvc_name }}
+  finalizers:
+    - kubernetes.io/pvc-protection
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: {{ .Values.postgresdb_params.database_pvc_size }}
+  storageClassName: netapp-file-standard
+  volumeMode: Filesystem
