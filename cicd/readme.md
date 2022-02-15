@@ -40,3 +40,18 @@ helm upgrade --install water-notations water-notations
 
 postgres/gis image:
 https://registry.hub.docker.com/r/postgis/postgis
+
+
+# Working with Postgres/gis
+
+set up port forwarding:
+
+`oc get pods`
+
+find the pod name that is running postgres/gis.  Likely starts with waternote-posgres-blahblah
+
+`oc port-forward <pod name> 5432:5432`
+
+login to database after port forwarding is set up:
+
+`psql <db name> -U <db user> -h 0.0.0.0`
