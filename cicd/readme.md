@@ -48,7 +48,7 @@ set up port forwarding:
 
 `oc get pods`
 
-find the pod name that is running postgres/gis.  Likely starts with waternote-posgres-blahblah
+find the pod name that is running postgres/gis.  Likely starts with waternote-postgres-blahblah
 
 `oc port-forward <pod name> 5432:5432`
 
