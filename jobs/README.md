@@ -20,7 +20,9 @@ Spatial queries to translate water notation points `WLS_WATER_RESERVATION_SV` in
 
 ## Data spec
 
-## input notations
+## Input notations
+
+Sample data for now:
 
     $ ogrinfo data/notations.gdb Notations_PROD_Jan26 -so
 
@@ -36,7 +38,7 @@ Spatial queries to translate water notation points `WLS_WATER_RESERVATION_SV` in
     SE_ANNO_CAD_DATA: Binary (0.0)
 
 
-## Required Outputs
+## Output tables
 
 ### Streams
 
@@ -61,17 +63,12 @@ Spatial queries to translate water notation points `WLS_WATER_RESERVATION_SV` in
 
 ## Usage
 
-1. Set up the FWA data
+- ensure environment variable `$DATABASE_URL` points to appropriate db
+
+- load FWA to `$DATABASE_URL` - this takes some time:
     
         ./fwapg.sh
 
-### dev
-
-Let's use an existing environment and db for a quick proof of concept with the provided sample data:
-
-    conda activate bcfishpass
-    ./wls_water_notation_streams.sh
-
-### test/prod
-
-    ./wls_water_notation_streams.sh
+- run the notation streams/aquifers script, and dump results to file:
+        
+        ./waternote.sh
