@@ -1,6 +1,10 @@
--- create notation table with fwa attributes
-drop table if exists nr_water_notations.notations;
+-- ----------------------------------------------------
+-- Match notations to streams
+-- Join source notation points to the closest fwa stream segment with matching blue_line_key
+-- ----------------------------------------------------
 
+-- create target table
+drop table if exists nr_water_notations.notations;
 create table nr_water_notations.notations (
 	wls_wn_sysid          integer                ,
 	notation_id           character varying(20)  ,
@@ -16,65 +20,8 @@ create table nr_water_notations.notations (
 	geom                  geometry(point,3005) 
 );
 
+
 -- populate the table
-with src_pts as
-(
-	select
-	  wls_wn_sysid,
-	  notation_id,
-	  notation_type,
-	  notation_description,
-	  blue_line_key,
-	  geom
-	from nr_water_notations.notations_src
-	where blue_line_key is not null
-),
-
-nearest as
-(
-  select
-	  pt.wls_wn_sysid,
-	  pt.notation_id,
-	  pt.notation_type,
-	  pt.notation_description,
-    str.linear_feature_id,
-    str.wscode_ltree,
-    str.localcode_ltree,
-    str.blue_line_key,
-    str.waterbody_key,
-    str.length_metre,
-    st_distance(str.geom, pt.geom) as distance_to_stream,
-    str.watershed_group_code,
-    str.downstream_route_measure as downstream_route_measure_str,
-    (
-      st_linelocatepoint(
-        st_linemerge(str.geom),
-          st_closestpoint(str.geom, pt.geom)
-      )
-      * str.length_metre
-  ) + str.downstream_route_measure as downstream_route_measure,
-  st_linemerge(str.geom) as geom_str
-  from src_pts pt
-  cross join lateral
-  (select
-     linear_feature_id,
-     wscode_ltree,
-     localcode_ltree,
-     blue_line_key,
-     waterbody_key,
-     length_metre,
-     downstream_route_measure,
-     watershed_group_code,
-     geom
-    from whse_basemapping.fwa_stream_networks_sp str
-    where str.localcode_ltree is not null
-    and not str.wscode_ltree <@ '999'
-    order by str.geom <-> pt.geom
-    limit 1) as str
-    where st_distance(str.geom, pt.geom) <= 100
-    and pt.blue_line_key = str.blue_line_key
-)
-
 insert into nr_water_notations.notations (
 	wls_wn_sysid,
 	notation_id,
@@ -90,29 +37,52 @@ insert into nr_water_notations.notations (
 	geom
 )
 
-select
-  wls_wn_sysid,
-  notation_id,
-  notation_type,
-  notation_description,
-  linear_feature_id,
-  blue_line_key,
-  downstream_route_measure,
-  wscode_ltree,
-  localcode_ltree,
-  distance_to_stream,
-  watershed_group_code,
+-- We know which stream to join to (blkey) but need to find the 
+-- closest point on closest segment with the matching blkey
+select distinct on (notation_id)  -- distinct notation_id in case segments are equidistant
+  pt.wls_wn_sysid,
+  pt.notation_id,
+  pt.notation_type,
+  pt.notation_description,
+  nn.linear_feature_id,
+  pt.blue_line_key,
+  (ST_LineLocatePoint(
+    nn.geom,
+    ST_ClosestPoint(nn.geom, pt.geom)
+    ) * nn.length_metre) + nn.downstream_route_measure AS downstream_route_measure,
+  nn.wscode_ltree,
+  nn.localcode_ltree,
+  nn.distance_to_stream,
+  nn.watershed_group_code,
   st_force2d(
-    st_lineinterpolatepoint(geom_str,
-     round(
-       cast(
-          (downstream_route_measure -
-             downstream_route_measure_str) / length_metre as numeric
-        ),
-       5)
-     )
-  )::geometry(point, 3005) as geom
-from nearest;
+    postgisftw.fwa_locatealong(
+      pt.blue_line_key, 
+      (ST_LineLocatePoint(
+        nn.geom,
+        ST_ClosestPoint(nn.geom, pt.geom)
+      ) * nn.length_metre) + nn.downstream_route_measure
+    )
+  ) as geom
+from nr_water_notations.notations_src as pt
+cross join lateral
+(select
+   str.linear_feature_id,
+   str.wscode_ltree,
+   str.localcode_ltree,
+   str.blue_line_key,
+   str.waterbody_key,
+   str.watershed_key,
+   str.gnis_name,
+   str.length_metre,
+   str.downstream_route_measure,
+   str.watershed_group_code,
+   str.geom,
+   st_distance(str.geom, pt.geom) as distance_to_stream
+  from whse_basemapping.fwa_stream_networks_sp as str  
+  where pt.blue_line_key = str.blue_line_key
+  order by str.geom <-> pt.geom
+  limit 1) as nn
+order by notation_id, distance_to_stream;
 
 create index on nr_water_notations.notations (linear_feature_id);
 create index on nr_water_notations.notations (blue_line_key);
