@@ -4,7 +4,7 @@ metadata:
   name: {{ .Values.dataloadjob.job_name }}
 spec:
   ttlSecondsAfterFinished: 100
-  suspend: true
+  #suspend: true
 
   template:
     spec:
