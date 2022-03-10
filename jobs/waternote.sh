@@ -12,8 +12,11 @@ ogr2ogr \
   -lco SCHEMA=nr_water_notations \
   -lco GEOMETRY_NAME=geom \
   -nln notations_src \
-  data/notations.gdb \
-  Notations_PROD_Jan26
+  data/wls_water_notation_points_qa.gdb.zip \
+  wls_water_notation_points_qa
+
+#data/notations.gdb \
+#Notations_PROD_Jan26
 
 # load aquifers
 bcdata bc2pg --db_url $DATABASE_URL WHSE_WATER_MANAGEMENT.GW_AQUIFERS_CLASSIFICATION_SVW

@@ -92,3 +92,17 @@ create index on nr_water_notations.notations using btree (wscode_ltree);
 create index on nr_water_notations.notations using gist (localcode_ltree);
 create index on nr_water_notations.notations using btree (localcode_ltree);
 create index on nr_water_notations.notations using gist (geom);
+
+
+--
+-- Snehumption exception
+--
+-- Snehumption Creek drains into the Similkameen at the BC/WA border, via
+-- several distributaries. The FWA says that the channel south of the border
+-- is the primary channel, so the Snehumption is never included as upstream of
+-- anything in BC. Fix this for any notation on the Similkameen by tweaking
+-- the local codes of notations at this spot, setting them to '300.432687.380566.173400',
+-- an imaginary location just downstream of the primary Similkameen/Snehumpion confluence.
+update nr_water_notations.notations
+  set localcode_ltree = '300.432687.380566.173400'::ltree
+where localcode_ltree = '300.432687.380566.184025'::ltree;
