@@ -16,7 +16,7 @@ ogr2ogr \
   Notations_PROD_Jan26
 
 # load aquifers
-bcdata bc2pg $DATABASE_URL WHSE_WATER_MANAGEMENT.GW_AQUIFERS_CLASSIFICATION_SVW
+bcdata bc2pg --db_url $DATABASE_URL WHSE_WATER_MANAGEMENT.GW_AQUIFERS_CLASSIFICATION_SVW
 
 # join points to streams
 psql -f sql/notations.sql
