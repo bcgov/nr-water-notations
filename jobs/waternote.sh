@@ -5,6 +5,7 @@ psql -c "drop schema if exists nr_water_notations cascade"
 psql -c "create schema if not exists nr_water_notations"
     
 # load sample notations
+wget --trust-server-names -qN https://nrs.objectstore.gov.bc.ca/dzzrch/wls_water_notation_points_qa.gdb.zip
 ogr2ogr \
   -t_srs EPSG:3005 \
   -f PostgreSQL PG:$DATABASE_URL \
@@ -12,11 +13,8 @@ ogr2ogr \
   -lco SCHEMA=nr_water_notations \
   -lco GEOMETRY_NAME=geom \
   -nln notations_src \
-  data/wls_water_notation_points_qa.gdb.zip \
+  wls_water_notation_points_qa.gdb.zip \
   wls_water_notation_points_qa
-
-#data/notations.gdb \
-#Notations_PROD_Jan26
 
 # load aquifers
 bcdata bc2pg --db_url $DATABASE_URL WHSE_WATER_MANAGEMENT.GW_AQUIFERS_CLASSIFICATION_SVW
@@ -41,6 +39,7 @@ rm -rf outputs
 mkdir -p outputs
 
 # dump to file (.fgb for now, no .gdb driver on dev machine)
+# consider dumping to gpkg
 ogr2ogr \
   -f FlatGeobuf \
   outputs/wls_water_notation_streams_sp.fgb \

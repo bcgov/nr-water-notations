@@ -47,7 +47,7 @@ Sample data for now:
 | LINEAR_FEATURE_ID        | Number   | 18      | A primary key to link the stream segments in WHSE_BASEMAPPING_FWA_STREAM_NETWORKS_SP
 | NOTATION_ID_LIST         | Varchar2 | 200     | A list of all Notation points downstream from the stream segment.
 | PRIMARY_NOTATION_TYPE    | Varchar2 | 12      | Indicates the type of Notation point downstream from the stream segment, i.e., Application refused (AR); Possible Water Shortage (PWS); Fully recorded (FR); Fully Recorded Except (FR-EXC); Office Reserve (OR).
-| SECONDARY_NOTATION_TYPES | Varchar2 | 30      | Secondary Notation Type is found upstream of the Primary Notation Code, and indicates the Notation Type i.e., Application refused (AR); Possible Water Shortage (PWS); Fully recorded (FR); Fully Recorded Except (FR-EXC); Office Reserve (OR).
+| SECONDARY_NOTATION_TYPES | Varchar2 | 30      | Secondary Notation Type is a list of the notation_type of all notations downstream of the primary notation type, in order downstream, with adjacent equivalent types removed. Where the string is > 30 char, indicate there are more types with '..' suffix after 28char
 | FWA_WATERSHED_CODE       | Varchar2 | 150     | A 143 character code derived using a hierarchy.
 | BLUE_LINE_KEY            | Number   | 10      | Uniquely identifies a single flow line such that a main channel and a secondary channel with the same watershed code would have different blue line keys (the Fraser River and all side channels have different blue line keys).
 
