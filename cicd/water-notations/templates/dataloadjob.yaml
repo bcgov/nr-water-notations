@@ -4,7 +4,7 @@ metadata:
   name: {{ .Values.dataloadjob.job_name }}
 spec:
   ttlSecondsAfterFinished: 100
-  #suspend: true
+  suspend: true
 
   template:
     spec:
@@ -34,7 +34,8 @@ spec:
               cp -r /home/fwapg/* . &&
               set -euxo pipefail &&
               export DATABASE_URL=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@{{ .Values.app_name }}-postgres-svc:5432/fwapg &&
-              make
+              sleep 16000
+              #make
         env:
             - name: POSTGRES_USER
               valueFrom:

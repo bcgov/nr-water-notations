@@ -106,7 +106,7 @@ artifactory_secret_name: artifacts-pull-artifacts-default-nncfox
 
 demojob:
   demojob_pvc_name: demojob-pvc
-  demojob_pvc_size: "25Gi"
+  demojob_pvc_size: "30Gi"
 
 
 dataloadjob:
