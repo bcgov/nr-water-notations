@@ -11,7 +11,9 @@ Spatial queries to translate water notation points `WLS_WATER_RESERVATION_SV` in
 - on scheduled basis
     + request notations from BCGW and dump to file 
     + compare downloaded notations to previous download, terminate if data unchanged
+
 If source data changed:
+
 - load notations to db
 - convert notation geoms to point locations on streams (`blue_line_key`/`downstream_route_measure`), linking only features with a `blue_line_key` in the source data
 - break stream features at notation points

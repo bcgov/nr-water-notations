@@ -64,8 +64,9 @@ set -euxo pipefail
       -sql "select * from nr_water_notations.wls_water_notation_aquifers_sp"
 
     # compress the outputs
-    gzip outputs/wls_water_notation_streams_sp.gpkg
-    gzip outputs/wls_water_notation_aquifers_sp.gpkg
+     cd outputs
+     zip -r wls_water_notation_streams_sp.gpkg.zip wls_water_notation_streams_sp.gpkg
+     zip -r wls_water_notation_aquifers_sp.gpkg.zip outputs/wls_water_notation_aquifers_sp.gpkg
 
     # move to object store
 
