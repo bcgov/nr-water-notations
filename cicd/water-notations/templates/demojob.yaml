@@ -19,7 +19,7 @@ spec:
         #Calling the shell script that was pulled by the init container
         # link to article showing how to call multiple commands in single
         # call: https://stackoverflow.com/questions/33979501/kubernetes-passing-multiple-commands-to-the-container
-        command: ["sh",  "/data/demogdal.sh"]
+        command: ["sh",  "sleep 6000"]
         volumeMounts:
         - name: demojob-volume
           mountPath: /data

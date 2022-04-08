@@ -111,7 +111,7 @@ demojob:
 
 dataloadjob:
   job_name: dataload
-  imagetag: 20220310-1701
+  imagetag: 20220408-1639
 
 artifactory:
   sa_name: artifactory-sa

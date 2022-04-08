@@ -46,6 +46,7 @@ to identify what the source dataset is.  This parameter is hardwired at the mome
 * **OBJECTSTORE_SECRET** the secret that is used to authenticate to object storage
 * **OBJECTSTORE_ID** the object storage id / user, used in combination with the secret to authenticate
 * **OBJECTSTORE_BUCKET** the name of the bucket in object store to connect to
+* **DEST_DB_ENV_KEY** used to calculate the file change object for a specific environment
 
 
 ## Functionality - How it works

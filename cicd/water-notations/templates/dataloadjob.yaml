@@ -32,10 +32,8 @@ spec:
           - >-
               cd /data &&
               cp -r /home/fwapg/* . &&
-              set -euxo pipefail &&
-              export DATABASE_URL=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@{{ .Values.app_name }}-postgres-svc:5432/fwapg &&
-              sleep 16000
-              #make
+              set -eux pipefail &&
+              export DATABASE_URL=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@{{ .Values.app_name }}-postgres-svc:5432/$POSTGRES_DB && make && sleep 60000
         env:
             - name: POSTGRES_USER
               valueFrom:
