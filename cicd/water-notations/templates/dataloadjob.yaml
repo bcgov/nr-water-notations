@@ -1,0 +1,73 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.dataloadjob.job_name }}
+spec:
+  ttlSecondsAfterFinished: 100
+  suspend: true
+
+  template:
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.artifactory_secret_name }}
+      volumes:
+      - name: dataload-volume
+        persistentVolumeClaim:
+          claimName: {{ .Values.demojob.demojob_pvc_name }}
+      containers:
+      - name: demogdal
+        resources:
+          requests:
+            cpu: 100m
+        image: >-
+          artifacts.developer.gov.bc.ca/docker-remote/guylafleur/gdal-util:{{ .Values.dataloadjob.imagetag }}
+        # docker pull guylafleur/gdal-util:20220309-0101
+        # docker pull
+        #Calling the shell script that was pulled by the init container
+        # link to article showing how to call multiple commands in single
+        # call: https://stackoverflow.com/questions/33979501/kubernetes-passing-multiple-commands-to-the-container
+        command: ["/bin/bash"]
+        args:
+          - -c
+          - >-
+              cd /data &&
+              cp -r /home/fwapg/* . &&
+              set -euxo pipefail &&
+              export DATABASE_URL=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@{{ .Values.app_name }}-postgres-svc:5432/fwapg &&
+              sleep 16000
+              #make
+        env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  key: database-user
+                  name: {{ .Values.postgresdb_params.database_secret_name }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: database-password
+                  name: {{ .Values.postgresdb_params.database_secret_name }}
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  key: database-name
+                  name: {{ .Values.postgresdb_params.database_secret_name }}
+        volumeMounts:
+        - name: dataload-volume
+          mountPath: /data
+      # initContainers:
+      # - name: config-data
+      #   # image: >-
+      #   #   artifacts.developer.gov.bc.ca/docker-remote/curlimages/curl:7.81.0
+      #   # #docker pull busybox:1.35.0
+      #   # #  artifacts.developer.gov.bc.ca/docker-remote/alpine/git:v2.32.0
+      #   # command: ["/bin/bash"]
+      #   # args:
+      #   #   - -c
+      #   #   - >-
+      #   #       curl https://raw.githubusercontent.com/bcgov/nr-water-notations/main/jobs/demogdal.sh","-o","/data/demogdal.sh"]
+      #   #command: ["ls","/data"]
+      #   volumeMounts:
+      #   - name: dataload-volume
+      #     mountPath: /data
+      restartPolicy: Never

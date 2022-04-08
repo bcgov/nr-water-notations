@@ -6,14 +6,14 @@ https://developer.gov.bc.ca/Artifact-Repositories-(Artifactory)
 
 ## Artifactory setup steps taken:
 
-
 ### Create artifactory Secret
 
 Steps outlined [here](https://developer.gov.bc.ca/Artifact-Repositories-(Artifactory)#can-we-have-more-than-one-artifactory-service-account)
 
 ```
-oc process -f https://raw.githubusercontent.com/bcgov/platform-services-archeobot/master/archeobot/config/samples/tmpl-artifactoryserviceaccount.yaml -p NAME="artifact" -p DESCRIPTOR="artifactory service account" | oc create -f -```
+oc process -f https://raw.githubusercontent.com/bcgov/platform-services-archeobot/master/archeobot/config/samples/tmpl-artifactoryserviceaccount.yaml -p NAME="artifact" -p DESCRIPTOR="artifactory service account" | oc create -f -
 ```
+
 
 ## Deployment
 
@@ -55,3 +55,13 @@ find the pod name that is running postgres/gis.  Likely starts with waternote-po
 login to database after port forwarding is set up:
 
 `psql <db name> -U <db user> -h 0.0.0.0`
+
+# Automate Data Load
+
+Created the dataload job that loads the data using the Makefile in this repo:
+https://github.com/franTarkenton/fwapg
+
+## todo:
+* stream
+
+

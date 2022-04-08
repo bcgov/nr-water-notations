@@ -1,0 +1,11 @@
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-same-namespace
+spec:
+  # Allow all pods within the current namespace to communicate
+  # to one another.
+  podSelector: {}
+  ingress:
+  - from:
+    - podSelector: {}

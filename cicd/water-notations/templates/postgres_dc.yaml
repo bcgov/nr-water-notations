@@ -66,7 +66,7 @@ spec:
                 - /bin/sh
                 - '-i'
                 - '-c'
-                - pg_isready -h 127.0.0.1 -p 5432
+                - pg_isready -h 127.0.0.1 -p 5432 -U $POSTGRES_USER -d $POSTGRES_DB
             failureThreshold: 3
             initialDelaySeconds: 30
             periodSeconds: 10
@@ -92,7 +92,8 @@ spec:
             timeoutSeconds: 1
           resources:
             limits:
-              memory: 512Mi
+              memory: 1.5Gi
+              cpu: 1
           securityContext:
             capabilities: {}
             privileged: false
