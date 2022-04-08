@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euxo pipefail
 
-# 1. dump notations from WFS to geojson
+# 1. dump notations from WFS to geojson (WGS84)
 # bcdata dump WHSE_WATER_MANAGEMENT.WLS_WATER_NOTATION_SV > wls_water_notation_sv.geojson
 
 # 2. detect if any changes have occured
@@ -15,7 +15,7 @@ set -euxo pipefail
 
     # load notations
     ogr2ogr \
-      -s_srs EPSG:3005 \
+      -s_srs EPSG:4326 \
       -t_srs EPSG:3005 \
       -f PostgreSQL PG:$DATABASE_URL \
       -lco OVERWRITE=YES \
