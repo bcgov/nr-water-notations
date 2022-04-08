@@ -1,5 +1,6 @@
 """
-Code here is what is injected into an FME python caller transformer.
+Code here will get put into an FME transformer to support the ability to detect
+file change on an object storage object.
 
 How it works?
 
@@ -242,7 +243,7 @@ CONST = constants()
 
 class S3ChangeDetector(object):
     def __init__(self):
-        self.srcFile = fme.macroValues['SRC_DATASET_FGDB_1']
+        self.srcFile = fme.macroValues['SRC_DATASET_GPKG_1']
         self.objChng = ObjectChange()
         self.fixedFile = self.objChng.fixPath(self.srcFile)
         LOGGER.debug("fixed file path is: {0}".format(self.fixedFile))
@@ -264,6 +265,9 @@ class S3ChangeDetector(object):
             # update the change file
             changeFilePath = self.objChng.calcChangeFile(self.fixedFile)
             self.objChng.createAndUploadChangeFile(self.fixedFile, changeFilePath)
+
+
+
 
 if __name__ == '__main__':
     LOGGER = logging.getLogger()

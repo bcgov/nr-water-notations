@@ -34,6 +34,9 @@ around how to get it done.
         * cpu
         * memory
 
+    * add cron job that runs every minute that makes sure all the relevant files
+      in the object store are public accessible.
+
 * Simon Actions
     * modify process that generates the notations using bcdata to use zip and
       not gz

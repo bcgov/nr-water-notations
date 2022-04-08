@@ -92,7 +92,8 @@ spec:
             timeoutSeconds: 1
           resources:
             limits:
-              memory: 512Mi
+              memory: 1.5Gi
+              cpu: 1
           securityContext:
             capabilities: {}
             privileged: false

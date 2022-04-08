@@ -32,6 +32,9 @@ class ObjectStoreUtil:
         stat = self.minIoClient.stat_object(CONST.OBJECTSTORE_BUCKET, inFilePath)
         return stat.etag
 
+    def uploadFile(self, filePath):
+
+
 CONST = constants()
 
 if __name__ == '__main__':
