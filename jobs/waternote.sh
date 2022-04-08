@@ -66,7 +66,7 @@ set -euxo pipefail
     # compress the outputs
      cd outputs
      zip -r wls_water_notation_streams_sp.gpkg.zip wls_water_notation_streams_sp.gpkg
-     zip -r wls_water_notation_aquifers_sp.gpkg.zip outputs/wls_water_notation_aquifers_sp.gpkg
+     zip -r wls_water_notation_aquifers_sp.gpkg.zip wls_water_notation_aquifers_sp.gpkg
 
     # move to object store
 
