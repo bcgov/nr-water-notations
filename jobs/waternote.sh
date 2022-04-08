@@ -1,54 +1,73 @@
 #!/bin/bash
 set -euxo pipefail
 
-psql -c "drop schema if exists nr_water_notations cascade"
-psql -c "create schema if not exists nr_water_notations"
-    
-# load sample notations
-ogr2ogr \
-  -t_srs EPSG:3005 \
-  -f PostgreSQL PG:$DATABASE_URL \
-  -lco OVERWRITE=YES \
-  -lco SCHEMA=nr_water_notations \
-  -lco GEOMETRY_NAME=geom \
-  -nln notations_src \
-  data/notations.gdb \
-  Notations_PROD_Jan26
+# 1. dump notations from WFS to geojson (WGS84)
+# bcdata dump WHSE_WATER_MANAGEMENT.WLS_WATER_NOTATION_SV > wls_water_notation_sv.geojson
 
-# load aquifers
-bcdata bc2pg $DATABASE_URL WHSE_WATER_MANAGEMENT.GW_AQUIFERS_CLASSIFICATION_SVW
+# 2. detect if any changes have occured
+# if python detect_source_changes.py wls_water_notation_sv.geojson
 
-# join points to streams
-psql -f sql/notations.sql
+# 3. Run the job if changes detected
+# then
+    # clear out working schema
+    psql -c "drop schema if exists nr_water_notations cascade"
+    psql -c "create schema if not exists nr_water_notations"
 
-# load all streams upstream of notations
-psql -f sql/streams.sql
+    # load notations
+    ogr2ogr \
+      -s_srs EPSG:4326 \
+      -t_srs EPSG:3005 \
+      -f PostgreSQL PG:$DATABASE_URL \
+      -lco OVERWRITE=YES \
+      -lco SCHEMA=nr_water_notations \
+      -lco GEOMETRY_NAME=geom \
+      -nln notations_src \
+      wls_water_notation_sv.geojson \
+      Notations_PROD_Jan26             # test layer name
 
-# break streams at notations
-psql -f sql/break_streams.sql    
+    # load aquifers
+    # (there is no need to detect changes in this one, so direct to db)
+    bcdata bc2pg --db_url $DATABASE_URL WHSE_WATER_MANAGEMENT.GW_AQUIFERS_CLASSIFICATION_SVW
 
-# make stream selection above breakpoints, add notation fields
-psql -f sql/wls_water_notation_streams_sp.sql
+    # join points to streams
+    psql -f sql/notations.sql
 
-# find aquifers that intersect notations
-psql -f sql/wls_water_notation_aquifers_sp.sql
+    # load all streams upstream of notations
+    psql -f sql/streams.sql
 
-# clear out any old outputs
-rm -rf outputs
-mkdir -p outputs
+    # break streams at notations
+    psql -f sql/break_streams.sql
 
-# dump to file (.fgb for now, no .gdb driver on dev machine)
-ogr2ogr \
-  -f FlatGeobuf \
-  outputs/wls_water_notation_streams_sp.fgb \
-  -nln wls_water_notation_streams_sp \
-  PG:$DATABASE_URL \
-  -sql "select * from nr_water_notations.wls_water_notation_streams_sp"
+    # make stream selection above breakpoints, add notation fields
+    psql -f sql/wls_water_notation_streams_sp.sql
 
-ogr2ogr \
-  -f FlatGeobuf \
-  outputs/wls_water_notation_aquifers_sp.fgb \
-  -nln wls_water_notation_aquifers_sp \
-  PG:$DATABASE_URL \
-  -sql "select * from nr_water_notations.wls_water_notation_aquifers_sp"
+    # find aquifers that intersect notations
+    psql -f sql/wls_water_notation_aquifers_sp.sql
 
+    # clear out any old outputs
+    rm -rf outputs
+    mkdir -p outputs
+
+    # dump outputs to file
+    ogr2ogr \
+      -f GPKG \
+      outputs/wls_water_notation_streams_sp.gpkg \
+      -nln wls_water_notation_streams_sp \
+      PG:$DATABASE_URL \
+      -sql "select * from nr_water_notations.wls_water_notation_streams_sp"
+
+    ogr2ogr \
+      -f GPKG \
+      outputs/wls_water_notation_aquifers_sp.gpkg \
+      -nln wls_water_notation_aquifers_sp \
+      PG:$DATABASE_URL \
+      -sql "select * from nr_water_notations.wls_water_notation_aquifers_sp"
+
+    # compress the outputs
+     cd outputs
+     zip -r wls_water_notation_streams_sp.gpkg.zip wls_water_notation_streams_sp.gpkg
+     zip -r wls_water_notation_aquifers_sp.gpkg.zip wls_water_notation_aquifers_sp.gpkg
+
+    # move to object store
+
+# fi
