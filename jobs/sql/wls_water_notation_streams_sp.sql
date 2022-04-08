@@ -41,7 +41,7 @@ with subset as (
   --where a.watershed_group_code = 'VICT' and fwa_watershed_code like ('925-303570-916663%')  -- testing
 ),
 
--- join back to notations in order downstream
+-- join streams back to notations, sorting notations in order downstream
 ordered as
 (
   select 
@@ -70,16 +70,70 @@ ordered as
       b.downstream_route_measure desc
 ),
 
+-- aggregate downstream notations into arrays per stream segment
 aggregated as
 (
   select 
     segmented_stream_id,
     array_to_string(array_agg(notation_id), ';') as notation_id_list,
     (array_agg(notation_type))[1] as primary_notation_type,
-    array_to_string((array_agg(notation_type))[2:4], ';') as secondary_notation_types -- can't include all notations dnstr, 30char is not nearly long enough. include up to 3
+    array_agg(notation_type) as all_notation_types
   from ordered
   group by 
     segmented_stream_id
+),
+
+-- to collapse the distinct adjacent types,
+-- extract only secondary notations and unnest the aggregation so we can use window functions
+secondary_notations as
+(
+  select
+    segmented_stream_id,
+    unnest(all_notation_types[2:]) as notation_type
+  from aggregated
+),
+
+-- find steps where the secondary notation type changes (also note row number
+-- because the first row is not identified as a step, by labelling it we can retain it)
+steps as
+(
+  SELECT
+    row_number() over() as row,
+    segmented_stream_id,
+    notation_type,
+    lag(segmented_stream_id||notation_type, 1, segmented_stream_id||notation_type) OVER () <> segmented_stream_id||notation_type AS step
+  FROM secondary_notations
+),
+
+-- extract notation types where there is a change in type per stream segment,
+-- then re-aggregate into an array
+parsed_steps as
+(
+select
+  segmented_stream_id,
+  array_agg(notation_type) as secondary_notation_types
+from steps
+where step is true or row = 1
+group by segmented_stream_id
+order by segmented_stream_id
+),
+
+-- put together the secondary notation types, limiting the
+-- string to 30 characters, with suffix '..' indicating overflows
+-- (do not bother breaking the string at an item, just insert the .. at 28 chars)
+secondary_notation_types as
+(
+  select
+    a.segmented_stream_id,
+    a.notation_id_list,
+    a.primary_notation_type,
+    a.all_notation_types,
+    case
+      when length(array_to_string(b.secondary_notation_types, ';')) < 30 then array_to_string(b.secondary_notation_types, ';')
+      else substring(array_to_string(b.secondary_notation_types, ';') from 1 for 28)||'..'
+    end as secondary_notation_types
+from aggregated a left outer join parsed_steps b
+on a.segmented_stream_id = b.segmented_stream_id
 )
 
 insert into nr_water_notations.wls_water_notation_streams_sp 
@@ -97,10 +151,12 @@ select
   s.linear_feature_id,
   n.notation_id_list,
   n.primary_notation_type,
-  n.secondary_notation_types,
+  st.secondary_notation_types,
   s.fwa_watershed_code,
   s.blue_line_key,
   s.geom
 from subset s 
 inner join aggregated n
-on s.segmented_stream_id = n.segmented_stream_id;
+on s.segmented_stream_id = n.segmented_stream_id
+left outer join secondary_notation_types st
+on s.segmented_stream_id = st.segmented_stream_id
