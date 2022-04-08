@@ -8,15 +8,18 @@ Spatial queries to translate water notation points `WLS_WATER_RESERVATION_SV` in
 ## Tasks
 
 - setup and load postgres/postgis FWA database via `fwapg`
-- load notations from S3 to the db
-- in the db, find streams upstream of notations:
-    + convert notation geoms to point locations on streams (`blue_line_key`/`downstream_route_measure`), linking only features with a `blue_line_key` in the source data
-    + break stream features at notation points
-    + find all resulting stream features upstream of notations
-    + create strings that list notations downstream of a given stream segment
-- process aquifers
-    + spatial join, linking aquifer based notations to aquifers
-- dump results of queries to .gdb as per spec below 
+- on scheduled basis
+    + request notations from BCGW and dump to file 
+    + compare downloaded notations to previous download, terminate if data unchanged
+If source data changed:
+- load notations to db
+- convert notation geoms to point locations on streams (`blue_line_key`/`downstream_route_measure`), linking only features with a `blue_line_key` in the source data
+- break stream features at notation points
+- find all resulting stream features upstream of notations
+- create strings that list notations downstream of a given stream segment
+- process aquifers (simple spatial join, linking aquifer based notations to aquifers)
+- dump results of queries to .gpkg as per spec below
+- upload resulting .gpkg to objectstore
 
 ## Data spec
 
@@ -76,6 +79,6 @@ Sample data for now:
     
         ./fwapg.sh
 
-- download notations and run the jobs if notations have changed:
+- download notations and run the job if notations have changed:
         
         ./waternote.sh
