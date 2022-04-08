@@ -24,18 +24,25 @@ Spatial queries to translate water notation points `WLS_WATER_RESERVATION_SV` in
 
 Sample data for now:
 
-    $ ogrinfo data/notations.gdb Notations_PROD_Jan26 -so
+    $ ogrinfo wls_water_notation_sv.geojson Notations_PROD_Jan26 -so
+    INFO: Open of `wls_water_notation_sv.geojson'
+          using driver `GeoJSON' successful.
 
-    FID Column = OBJECTID
-    Geometry Column = Shape
+    Layer name: Notations_PROD_Jan26
+    Geometry: Point
+    Feature Count: 4932
+    Extent: (512994.580200, 372000.978400) - (1814716.555300, 1693592.725400)
+    Layer SRS WKT:
+    PROJCRS["NAD83 / BC Albers",
+    ...etc....
     WLS_WN_SYSID: Integer (0.0)
-    NOTATION_ID: String (20.0)
-    NOTATION_TYPE: String (20.0)
-    NOTATION_DESCRIPTION: String (140.0)
+    NOTATION_ID: String (0.0)
+    NOTATION_TYPE: String (0.0)
+    NOTATION_DESCRIPTION: String (0.0)
     BLUE_LINE_KEY: Integer (0.0)
     LATITUDE: Real (0.0)
     LONGITUDE: Real (0.0)
-    SE_ANNO_CAD_DATA: Binary (0.0)
+    SE_ANNO_CAD_DATA: String (0.0)
 
 
 ## Output tables
@@ -69,6 +76,6 @@ Sample data for now:
     
         ./fwapg.sh
 
-- run the notation streams/aquifers script, and dump results to file:
+- download notations and run the jobs if notations have changed:
         
         ./waternote.sh
