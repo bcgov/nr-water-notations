@@ -11,18 +11,61 @@ spec:
       volumes:
       - name: demojob-volume
         persistentVolumeClaim:
+        #  claimName: {{ .Values.postgresdb_params.database_pvc_name }}
           claimName: {{ .Values.demojob.demojob_pvc_name }}
       containers:
       - name: demogdal
         image: >-
-          artifacts.developer.gov.bc.ca/docker-remote/osgeo/gdal:alpine-normal-3.4.1
-        #Calling the shell script that was pulled by the init container
-        # link to article showing how to call multiple commands in single
-        # call: https://stackoverflow.com/questions/33979501/kubernetes-passing-multiple-commands-to-the-container
-        command: ["sh",  "sleep 6000"]
+          artifacts.developer.gov.bc.ca/docker-remote/guylafleur/gdal-util:{{ .Values.dataloadjob.imagetag }}
         volumeMounts:
         - name: demojob-volume
           mountPath: /data
+
+        #Calling the shell script that was pulled by the init container
+        # link to article showing how to call multiple commands in single
+        # call: https://stackoverflow.com/questions/33979501/kubernetes-passing-multiple-commands-to-the-container
+        command: ["/bin/bash"]
+        args:
+          - -c
+          - >-
+              sleep 60000 && ls
+        env:
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                key: database-user
+                name: {{ .Values.postgresdb_params.database_secret_name }}
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: database-password
+                name: {{ .Values.postgresdb_params.database_secret_name }}
+          - name: POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                key: database-name
+                name: {{ .Values.postgresdb_params.database_secret_name }}
+          - name: OBJECTSTORE_BUCKET
+            valueFrom:
+              secretKeyRef:
+                key: OBJECTSTORE_BUCKET
+                name: {{ .Values.objectstorage.secret_name }}
+          - name: OBJECTSTORE_HOST
+            valueFrom:
+              secretKeyRef:
+                key: OBJECTSTORE_HOST
+                name: {{ .Values.objectstorage.secret_name }}
+          - name: OBJECTSTORE_ID
+            valueFrom:
+              secretKeyRef:
+                key: OBJECTSTORE_ID
+                name: {{ .Values.objectstorage.secret_name }}
+          - name: OBJECTSTORE_SECRET
+            valueFrom:
+              secretKeyRef:
+                key: OBJECTSTORE_SECRET
+                name: {{ .Values.objectstorage.secret_name }}
+
       initContainers:
       - name: config-data
         image: >-

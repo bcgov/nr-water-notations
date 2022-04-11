@@ -46,20 +46,9 @@ if __name__ == '__main__':
     LOGGER.addHandler(hndlr)
     LOGGER.debug("test")
 
-
-
     obj = ObjectStoreUtil()
 
     objStoreFileName = "wls_water_notation_streams_sp.gpkg.gz"
     etag = obj.getEtag(objStoreFileName)
     print(f"etag: {etag}")
-
-
-
-
-
-
-
-
-
 

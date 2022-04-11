@@ -65,7 +65,13 @@ class ModuleInit:
     def install(self):
         trustParams = "--trusted-host pypi.org --trusted-host pypi.python.ordfg --trusted-host files.pythonhosted.org"
         #pipInstall = 'pip install {0} -t {1} minio --global http.sslVerify false'.format(trustParams, depDir)
-        pipInstall = 'python -m pip install -t {0} minio==5.0.10'.format( self.depDir)
+        pypath = 'python'
+        if 'FME_HOME_DOS' in os.environ:
+            fmePath = os.path.join(os.environ['FME_HOME_DOS'], 'fme.exe')
+            pypath = '{0} python'.format(fmePath)
+
+        pipInstall = '{1} -m pip install -t {0} minio==5.0.10'.format( self.depDir, pypath)
+
         LOGGER.debug(pipInstall)
         print pipInstall
         os.system(pipInstall)
