@@ -65,7 +65,13 @@ class ModuleInit:
     def install(self):
         trustParams = "--trusted-host pypi.org --trusted-host pypi.python.ordfg --trusted-host files.pythonhosted.org"
         #pipInstall = 'pip install {0} -t {1} minio --global http.sslVerify false'.format(trustParams, depDir)
-        pipInstall = 'python -m pip install -t {0} minio==5.0.10'.format( self.depDir)
+        pypath = 'python'
+        if 'FME_HOME_DOS' in os.environ:
+            fmePath = os.path.join(os.environ['FME_HOME_DOS'], 'fme.exe')
+            pypath = '{0} python'.format(fmePath)
+
+        pipInstall = '{1} -m pip install -t {0} minio==5.0.10'.format( self.depDir, pypath)
+
         LOGGER.debug(pipInstall)
         print pipInstall
         os.system(pipInstall)
@@ -83,7 +89,6 @@ class constants:
             self.getFMEMacroVars()
         except ImportError:
             self.getEnvVars()
-
 
 
     def getFMEMacroVars(self):
@@ -135,8 +140,8 @@ class ObjectChange:
         LOGGER.debug("new path: {0}".format(path))
         return path
 
-    def calcChangeFile(self, inputFilePath):
-        changeFilePath = os.path.splitext(inputFilePath)[0] + self.changeSuffix
+    def calcChangeFile(self, inputFilePath, dbenv):
+        changeFilePath = os.path.splitext(inputFilePath)[0] + '.' + dbenv + self.changeSuffix
         return changeFilePath
 
     def listObjects(self, inDir=None, recursive=True,
@@ -204,25 +209,25 @@ class ObjectChange:
             length=len(etagBytes))
         LOGGER.debug("return value from upload of etag for file: {0} is {1}".format(changeFilePath, retVal))
 
-    def getCachedEtag(self, inFilePath):
-        fileChangeFile = self.calcChangeFile(inFilePath)
+    def getCachedEtag(self, inFilePath, dbenv):
+        fileChangeFile = self.calcChangeFile(inFilePath, dbenv)
         resp = self.minIoClient.get_object(CONST.OBJECTSTORE_BUCKET, fileChangeFile)
         LOGGER.debug("resp.data: {0}".format(resp.data))
         LOGGER.debug("resp: {0}".format(resp))
         return resp.data
 
-    def hasChanged(self, inFilePath):
+    def hasChanged(self, inFilePath, dbEnv):
         """Returns a true or false that indicates if the input file has changed
         """
         LOGGER.info("Checking the file {0} to see if it has changed")
         hasChanged = False
-        changeFilePath = self.calcChangeFile(inFilePath)
+        changeFilePath = self.calcChangeFile(inFilePath, dbEnv)
         LOGGER.debug("change file: {0}".format(changeFilePath))
         if not self.fileExists(changeFilePath):
             LOGGER.debug("The file: {0} does not exist".format(changeFilePath))
             LOGGER.debug("The input file: {0}".format(inFilePath))
 
-            self.createAndUploadChangeFile(inFilePath, changeFilePath)
+            #self.createAndUploadChangeFile(inFilePath, changeFilePath)
             # first time through if the file change file does not exist then
             # assumption is made that the data has changed.
             hasChanged = True
@@ -232,7 +237,7 @@ class ObjectChange:
             LOGGER.debug("change file found!  getting etag data")
             currentEtag = self.getEtag(inFilePath)
             LOGGER.debug("current etag: {0}".format(currentEtag))
-            cachedEtag = self.getCachedEtag(inFilePath)
+            cachedEtag = self.getCachedEtag(inFilePath, dbEnv)
             LOGGER.debug("cached etag: {0}".format(cachedEtag))
             if cachedEtag != currentEtag:
                 hasChanged = True
@@ -244,10 +249,12 @@ CONST = constants()
 class S3ChangeDetector(object):
     def __init__(self):
         self.srcFile = fme.macroValues['SRC_DATASET_GPKG_1']
+        self.dbenv = fme.macroValues['DEST_DB_ENV_KEY']
+
         self.objChng = ObjectChange()
         self.fixedFile = self.objChng.fixPath(self.srcFile)
         LOGGER.debug("fixed file path is: {0}".format(self.fixedFile))
-        self.objectChangeStatus = self.objChng.hasChanged(self.fixedFile)
+        self.objectChangeStatus = self.objChng.hasChanged(self.fixedFile, self.dbenv)
 
     def input(self,feature):
         #if self.objectChangeStatus is None:
@@ -263,7 +270,7 @@ class S3ChangeDetector(object):
     def close(self):
         if self.objectChangeStatus:
             # update the change file
-            changeFilePath = self.objChng.calcChangeFile(self.fixedFile)
+            changeFilePath = self.objChng.calcChangeFile(self.fixedFile, self.dbenv)
             self.objChng.createAndUploadChangeFile(self.fixedFile, changeFilePath)
 
 
