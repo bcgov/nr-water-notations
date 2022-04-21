@@ -34,10 +34,9 @@ spec:
         args:
           - -c
           - >-
-              cd /data &&
-              cp -r /home/fwapg/* . &&
+              cd /data/fwapg &&
               set -eux pipefail &&
-              export DATABASE_URL=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@{{ .Values.app_name }}-postgres-svc:5432/$POSTGRES_DB && make clean && make && sleep 60000
+              export DATABASE_URL=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@{{ .Values.app_name }}-postgres-svc:5432/$POSTGRES_DB && make clean_targets && make clean_db && make && sleep 60000
         env:
         - name: POSTGRES_USER
           valueFrom:
@@ -74,5 +73,15 @@ spec:
             secretKeyRef:
               key: OBJECTSTORE_SECRET
               name: {{ .Values.objectstorage.secret_name }}
+
+      initContainers:
+      - name: config-data
+        image: >-
+          artifacts.developer.gov.bc.ca/docker-remote/alpine/git:v2.32.0
+        command: ["git", "clone", "https://github.com/smnorris/fwapg.git", "/data/fwapg"]
+        #command: ["ls","/data"]
+        volumeMounts:
+        - name: dataload-volume
+          mountPath: /data
 
       restartPolicy: Never
