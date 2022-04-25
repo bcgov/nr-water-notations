@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ .Values.dataloadjob.job_name }}
+  name: {{ .Values.notationsjob.job_name }}
 spec:
   ttlSecondsAfterFinished: 100
   suspend: true
@@ -21,23 +21,19 @@ spec:
             cpu: 100m
         image: >-
           artifacts.developer.gov.bc.ca/docker-remote/guylafleur/gdal-util:{{ .Values.dataloadjob.imagetag }}
-        # docker pull guylafleur/gdal-util:20220309-0101
-        # docker pull
-        #Calling the shell script that was pulled by the init container
-        # link to article showing how to call multiple commands in single
-        # call: https://stackoverflow.com/questions/33979501/kubernetes-passing-multiple-commands-to-the-container
         volumeMounts:
         - name: dataload-volume
           mountPath: /data
-
         command: ["/bin/bash"]
         args:
           - -c
           - >-
-              cd /data/fwapg &&
-              set -eux pipefail &&
+              cd /data &&
+              rm -rf nr-water-notations &&
+              git clone https://github.com/bcgov/nr-water-notations.git &&
+              cd nr-water-notations/jobs &&
               export DATABASE_URL=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@{{ .Values.app_name }}-postgres-svc:5432/$POSTGRES_DB &&
-              make &&
+              ./waternote.sh &&
               sleep 60000
         env:
         - name: POSTGRES_USER

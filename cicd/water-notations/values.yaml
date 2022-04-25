@@ -108,10 +108,13 @@ demojob:
   demojob_pvc_name: demojob-pvc
   demojob_pvc_size: "30Gi"
 
-
 dataloadjob:
   job_name: dataload
-  imagetag: 20220409-0253
+  imagetag: 20220422-1807
+
+notationsjob:
+  job_name: notations
+  imagetag: 20220422-1807
 
 artifactory:
   sa_name: artifactory-sa

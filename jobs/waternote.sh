@@ -1,13 +1,17 @@
 #!/bin/bash
 set -euxo pipefail
 
+# Kludge to get the OGR to work with the container that was built and being
+# run in openshift... To address this issue:
+# https://github.com/OSGeo/gdal/issues/4570
+DATABASE_URL_OGR=$DATABASE_URL?application_name=foo
+
 # 1. dump notations via WFS and load to objectstore (for easy change detection)
 #bcdata dump WHSE_WATER_MANAGEMENT.WLS_WATER_NOTATION_SV > wls_water_notation_sv.geojson
 python tos3.py wls_water_notation_sv.geojson
 
 # 2. detect if any changes have occured, run the job if they have
 if python fileChange.py -haschanged wls_water_notation_sv.geojson | grep -q 'True'; then
-
     # clear out working schema
     psql $DATABASE_URL -c "drop schema if exists nr_water_notations cascade"
     psql $DATABASE_URL -c "create schema if not exists nr_water_notations"
@@ -16,7 +20,7 @@ if python fileChange.py -haschanged wls_water_notation_sv.geojson | grep -q 'Tru
     ogr2ogr \
       -s_srs EPSG:4326 \
       -t_srs EPSG:3005 \
-      -f PostgreSQL PG:$DATABASE_URL \
+      -f PostgreSQL PG:$DATABASE_URL_OGR \
       -lco OVERWRITE=YES \
       -lco SCHEMA=nr_water_notations \
       -lco GEOMETRY_NAME=geom \
@@ -52,14 +56,14 @@ if python fileChange.py -haschanged wls_water_notation_sv.geojson | grep -q 'Tru
       -f GPKG \
       wls_water_notation_streams_sp.gpkg \
       -nln wls_water_notation_streams_sp \
-      PG:$DATABASE_URL \
+      PG:$DATABASE_URL_OGR \
       -sql "select * from nr_water_notations.wls_water_notation_streams_sp"
 
     ogr2ogr \
       -f GPKG \
       wls_water_notation_aquifers_sp.gpkg \
       -nln wls_water_notation_aquifers_sp \
-      PG:$DATABASE_URL \
+      PG:$DATABASE_URL_OGR \
       -sql "select * from nr_water_notations.wls_water_notation_aquifers_sp"
 
     # compress the outputs
