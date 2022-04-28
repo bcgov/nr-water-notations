@@ -23,7 +23,7 @@ to_break as
     s.upstream_route_measure as meas_stream_us,
     b.downstream_route_measure as meas_event
   from
-    nr_water_notations.streams s
+    nr_water_notations.streams_test s
     inner join breakpoints b
     on s.blue_line_key = b.blue_line_key and
     -- match based on measure, but only break stream lines where the
@@ -47,17 +47,15 @@ new_measures as
     to_break
 )
 
--- create new geoms
+-- and insert the new records
 select
   n.segmented_stream_id,
   s.linear_feature_id,
+  s.blue_line_key,
   n.downstream_route_measure,
-  n.upstream_route_measure,
-  (st_dump(st_locatebetween
-    (s.geom, n.downstream_route_measure, n.upstream_route_measure
-    ))).geom as geom
+  n.upstream_route_measure
 from new_measures n
-inner join nr_water_notations.streams s 
+inner join nr_water_notations.streams_test s 
 on n.segmented_stream_id = s.segmented_stream_id;
 
 
@@ -74,25 +72,14 @@ with min_segs as
   order by
     segmented_stream_id,
     downstream_route_measure asc
-),
-
-shortened as
-(
-  select
-    m.segmented_stream_id,
-    st_length(st_locatebetween(s.geom, s.downstream_route_measure, m.downstream_route_measure)) as length_metre,
-    (st_dump(st_locatebetween (s.geom, s.downstream_route_measure, m.downstream_route_measure))).geom as geom
-  from min_segs m
-  inner join nr_water_notations.streams s
-  on m.segmented_stream_id = s.segmented_stream_id
 )
 
 update
-  nr_water_notations.streams a
+  nr_water_notations.streams_test a
 set
-  geom = b.geom
+  upstream_route_measure = b.downstream_route_measure --geom = b.geom
 from
-  shortened b
+  min_segs b
 where
   b.segmented_stream_id = a.segmented_stream_id;
 
@@ -100,31 +87,17 @@ where
 ---------------------------------------------------------------
 -- now insert new features
 ---------------------------------------------------------------
-insert into nr_water_notations.streams
+insert into nr_water_notations.streams_test
 (
   linear_feature_id,
-  edge_type,
   blue_line_key,
-  watershed_key,
-  watershed_group_code,
-  waterbody_key,
-  wscode_ltree,
-  localcode_ltree,
-  gnis_name,
-  geom
+  downstream_route_measure,
+  upstream_route_measure
 )
 select
-  t.linear_feature_id,
-  s.edge_type,
-  s.blue_line_key,
-  s.watershed_key,
-  s.watershed_group_code,
-  s.waterbody_key,
-  s.wscode_ltree,
-  s.localcode_ltree,
-  s.gnis_name,
-  t.geom
-from temp_streams t
-inner join whse_basemapping.fwa_stream_networks_sp s
-on t.linear_feature_id = s.linear_feature_id
+  linear_feature_id,
+  blue_line_key,
+  downstream_route_measure,
+  upstream_route_measure
+from temp_streams
 on conflict do nothing;
