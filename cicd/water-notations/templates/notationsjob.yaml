@@ -20,7 +20,7 @@ spec:
           requests:
             cpu: 100m
         image: >-
-          artifacts.developer.gov.bc.ca/docker-remote/guylafleur/gdal-util:{{ .Values.dataloadjob.imagetag }}
+          artifacts.developer.gov.bc.ca/docker-remote/snorris75/gdal-util:{{ .Values.notationsjob.imagetag }}
         volumeMounts:
         - name: dataload-volume
           mountPath: /data
@@ -33,6 +33,7 @@ spec:
               git clone https://github.com/bcgov/nr-water-notations.git &&
               cd nr-water-notations/jobs &&
               export DATABASE_URL=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@{{ .Values.app_name }}-postgres-svc:5432/$POSTGRES_DB &&
+              export BCDATA_CACHE=/data/.bcdata &&
               ./waternote.sh &&
               sleep 60000
         env:

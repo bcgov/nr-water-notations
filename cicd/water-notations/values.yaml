@@ -110,11 +110,11 @@ demojob:
 
 dataloadjob:
   job_name: dataload
-  imagetag: 20220422-1807
+  imagetag: 20220425-2314
 
 notationsjob:
   job_name: notations
-  imagetag: 20220422-1807
+  imagetag: 20220427-0858
 
 artifactory:
   sa_name: artifactory-sa
