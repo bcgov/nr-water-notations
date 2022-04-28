@@ -23,7 +23,7 @@ to_break as
     s.upstream_route_measure as meas_stream_us,
     b.downstream_route_measure as meas_event
   from
-    nr_water_notations.streams_test s
+    nr_water_notations.streams s
     inner join breakpoints b
     on s.blue_line_key = b.blue_line_key and
     -- match based on measure, but only break stream lines where the
@@ -55,7 +55,7 @@ select
   n.downstream_route_measure,
   n.upstream_route_measure
 from new_measures n
-inner join nr_water_notations.streams_test s 
+inner join nr_water_notations.streams s
 on n.segmented_stream_id = s.segmented_stream_id;
 
 
@@ -75,7 +75,7 @@ with min_segs as
 )
 
 update
-  nr_water_notations.streams_test a
+  nr_water_notations.streams a
 set
   upstream_route_measure = b.downstream_route_measure --geom = b.geom
 from
@@ -87,7 +87,7 @@ where
 ---------------------------------------------------------------
 -- now insert new features
 ---------------------------------------------------------------
-insert into nr_water_notations.streams_test
+insert into nr_water_notations.streams
 (
   linear_feature_id,
   blue_line_key,
