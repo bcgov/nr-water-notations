@@ -69,7 +69,8 @@ ordered as
     a.segmented_stream_id,
     b.wscode_ltree desc,
     b.localcode_ltree desc,
-    b.downstream_route_measure desc
+    b.downstream_route_measure desc,
+    array_position(ARRAY['FR','FR-EXC','OR','PWS','AR'], b.notation_type)
 ),
 
 -- aggregate downstream notations into arrays per stream segment
