@@ -1,3 +1,5 @@
+import os
+
 from minio import Minio
 from minio.error import S3Error
 import click
@@ -20,8 +22,8 @@ def tos3(filename, host, bucket, id, secret):
         bucket,
         filename,
         filename,
-    )
-
+        metadata={'x-amz-acl': 'public-read'}
+     )
 
 if __name__ == "__main__":
     try:
