@@ -53,7 +53,7 @@ if python fileChange.py -haschanged wls_water_notation_sv.geojson | grep -q 'Tru
     # load data per watershed group so we do not overwhelm the db resources
     for wsg in $(psql $DATABASE_URL -AtX -c "select distinct watershed_group_code
         from nr_water_notations.notations
-        order by watershed_group_code limit 5")
+        order by watershed_group_code")
     do
         psql $DATABASE_URL -f sql/streams.sql -v wsg=$wsg
     done
