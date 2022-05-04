@@ -2,14 +2,16 @@ insert into nr_water_notations.streams
 ( linear_feature_id,
   blue_line_key,
   downstream_route_measure,
-  upstream_route_measure
+  upstream_route_measure,
+  watershed_group_code
 )
 
 select distinct
   b.linear_feature_id,
   b.blue_line_key,
   b.downstream_route_measure,
-  b.upstream_route_measure
+  b.upstream_route_measure,
+  b.watershed_group_code
 from nr_water_notations.notations a
 inner join whse_basemapping.fwa_stream_networks_sp b
 on fwa_upstream(

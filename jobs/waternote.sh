@@ -46,7 +46,8 @@ if python fileChange.py -haschanged wls_water_notation_sv.geojson | grep -q 'Tru
       linear_feature_id        bigint,
       blue_line_key integer,
       downstream_route_measure double precision,
-      upstream_route_measure    double precision
+      upstream_route_measure    double precision,
+      watershed_group_code character varying(4)
     );
     truncate nr_water_notations.streams;"
 
@@ -83,7 +84,7 @@ if python fileChange.py -haschanged wls_water_notation_sv.geojson | grep -q 'Tru
     # dump output streams per watershed group
     for WSG in $(psql $DATABASE_URL -AtX \
         -c "select distinct watershed_group_code
-            from nr_water_notations.notations
+            from nr_water_notations.streams
             order by watershed_group_code")
     do
         SQL=$(cat sql/wls_water_notation_streams_sp.sql)
