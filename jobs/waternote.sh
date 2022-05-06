@@ -30,7 +30,7 @@ if python fileChange.py -haschanged wls_water_notation_sv.geojson | grep -q 'Tru
       -lco GEOMETRY_NAME=geom \
       -nln notations_src \
       wls_water_notation_sv.geojson \
-      Notations_PROD_Jan26             # TODO - change layer name for prod data
+      wls_water_notation_sv
 
     # join points to streams
     psql $DATABASE_URL -f sql/notations.sql
