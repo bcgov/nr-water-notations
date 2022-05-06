@@ -7,7 +7,7 @@ set -euxo pipefail
 DATABASE_URL_OGR=$DATABASE_URL?application_name=foo
 
 # 1. dump notations via WFS and load to objectstore (for easy change detection)
-#bcdata dump WHSE_WATER_MANAGEMENT.WLS_WATER_NOTATION_SV > wls_water_notation_sv.geojson
+bcdata dump WHSE_WATER_MANAGEMENT.WLS_WATER_NOTATION_SV > wls_water_notation_sv.geojson
 python tos3.py wls_water_notation_sv.geojson
 
 # 2. detect if any changes have occured, run the job if they have
