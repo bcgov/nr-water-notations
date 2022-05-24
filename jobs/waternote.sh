@@ -45,6 +45,7 @@ if python fileChange.py -haschanged wls_water_notation_sv.geojson | grep -q 'Tru
          GENERATED ALWAYS AS (blue_line_key::text|| '.' || round((downstream_route_measure * 1000))::text) STORED PRIMARY KEY,
       linear_feature_id        bigint,
       blue_line_key integer,
+      watershed_key integer,
       downstream_route_measure double precision,
       upstream_route_measure    double precision,
       watershed_group_code character varying(4)
@@ -89,6 +90,16 @@ if python fileChange.py -haschanged wls_water_notation_sv.geojson | grep -q 'Tru
     do
         SQL=$(cat sql/wls_water_notation_streams_sp.sql)
         echo "Dumping $WSG to file"
+        ogr2ogr \
+            -f GPKG \
+            -append \
+            -update \
+            -nln wls_water_notation_streams_sp \
+            wls_water_notation_streams_sp.gpkg \
+            PG:$DATABASE_URL_OGR \
+            -sql "${SQL/'%s'/$WSG}"
+        # add side channels with null local codes as best as possible
+        SQL=$(cat sql/wls_water_notation_streams_sp_sidechannels.sql)
         ogr2ogr \
             -f GPKG \
             -append \

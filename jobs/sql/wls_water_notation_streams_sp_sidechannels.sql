@@ -7,6 +7,7 @@ select
   a.blue_line_key,
   a.upstream_route_measure,
   a.downstream_route_measure,
+  s.watershed_key,
   s.wscode_ltree,
   s.localcode_ltree,
   s.fwa_watershed_code
@@ -14,10 +15,52 @@ from nr_water_notations.streams a
 inner join whse_basemapping.fwa_stream_networks_sp s
 on a.linear_feature_id = s.linear_feature_id
 where s.watershed_group_code = '%s'
-and s.localcode_ltree is not null -- do not include features with null local codes
 ),
 
--- get streams to work with
+-- for null localcode side channel processing, find out if notation is located 
+-- at/near mouth of stream
+-- find first 3 segments in the stream
+-- (presumably this cutoff will not work 100% of the time but should be fine almost)
+ordered_segments as 
+(
+    select 
+      row_number() over( partition by s.blue_line_key order by s.blue_line_key, s.downstream_route_measure) as n,
+      s.linear_feature_id,
+      s.blue_line_key,
+      s.downstream_route_measure
+    from nr_water_notations.notations n
+    inner join streams s
+    on n.blue_line_key = s.blue_line_key
+),
+
+start_of_stream as
+(
+  select 
+    a.notation_id,
+    a.linear_feature_id,
+  case 
+    when b.n <= 3 or a.downstream_route_measure < 250 then true
+    else false 
+  end as start_of_stream_ind
+  from nr_water_notations.notations a
+  inner join ordered_segments b
+  on a.linear_feature_id = b.linear_feature_id
+),
+
+-- do not process streams with more than one notation on the given watershed code
+streams_with_multiple_notations as
+(
+select distinct
+  a.wscode_ltree
+from nr_water_notations.notations a
+inner join nr_water_notations.notations b
+on a.wscode_ltree = b.wscode_ltree
+  and a.notation_id != b.notation_id
+  and abs(a.downstream_route_measure - b.downstream_route_measure) > 50
+where a.wscode_ltree <@ '999'::ltree is false
+),
+
+-- get streams to work with - side channels with null local code
 subset as (
   select distinct
     b.segmented_stream_id,
@@ -29,27 +72,26 @@ subset as (
     b.upstream_route_measure,
     b.downstream_route_measure
   from nr_water_notations.notations a
+  inner join start_of_stream ss
+  on a.notation_id = ss.notation_id
   inner join streams b
-  on fwa_upstream(
-    a.blue_line_key,
-    a.downstream_route_measure,
-    a.wscode_ltree,
-    a.localcode_ltree,
-    b.blue_line_key,
-    b.downstream_route_measure,
-    b.wscode_ltree,
-    b.localcode_ltree,
-    True,
-    1)
+  on
+    b.localcode_ltree is null and
+    b.blue_line_key != b.watershed_key
+  left outer join streams_with_multiple_notations mn
+  on b.wscode_ltree = mn.wscode_ltree
+  where ss.start_of_stream_ind is true
+  and mn.wscode_ltree is null
 ),
 
 -- join streams back to notations, sorting notations in order downstream
-ordered as
-(
+ordered as (
   select
     a.segmented_stream_id,
     b.notation_id,
     b.notation_type,
+    a.wscode_ltree,
+    a.localcode_ltree,
     a.upstream_route_measure,
     a.downstream_route_measure
   from subset a
@@ -66,6 +108,7 @@ ordered as
             True,
             1
         )
+  or a.wscode_ltree = b.wscode_ltree
   order by
     a.segmented_stream_id,
     b.wscode_ltree desc,
