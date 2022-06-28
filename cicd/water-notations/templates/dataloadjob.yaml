@@ -1,79 +1,86 @@
 apiVersion: batch/v1
-kind: Job
+kind: CronJob
 metadata:
   name: {{ .Values.dataloadjob.job_name }}
 spec:
-  ttlSecondsAfterFinished: 100
-  suspend: true
-
-  template:
+  #ttlSecondsAfterFinished: 100
+  suspend: false
+  # every day at midnight
+  schedule: "0 0 * * *"
+  jobTemplate:
     spec:
-      imagePullSecrets:
-        - name: {{ .Values.artifactory_secret_name }}
-      volumes:
-      - name: dataload-volume
-        persistentVolumeClaim:
-          claimName: {{ .Values.demojob.demojob_pvc_name }}
-      containers:
-      - name: demogdal
-        resources:
-          requests:
-            cpu: 100m
-        image: >-
-          artifacts.developer.gov.bc.ca/docker-remote/guylafleur/gdal-util:{{ .Values.dataloadjob.imagetag }}
-        # docker pull guylafleur/gdal-util:20220309-0101
-        # docker pull
-        #Calling the shell script that was pulled by the init container
-        # link to article showing how to call multiple commands in single
-        # call: https://stackoverflow.com/questions/33979501/kubernetes-passing-multiple-commands-to-the-container
-        volumeMounts:
-        - name: dataload-volume
-          mountPath: /data
+      template:
+        spec:
+          imagePullSecrets:
+            - name: {{ .Values.artifactory_secret_name }}
+          volumes:
+          - name: dataload-volume
+            persistentVolumeClaim:
+              claimName: {{ .Values.demojob.demojob_pvc_name }}
+          containers:
+          - name: demogdal
+            resources:
+              requests:
+                cpu: 100m
+            image: >-
+              artifacts.developer.gov.bc.ca/docker-remote/guylafleur/gdal-util:{{ .Values.dataloadjob.imagetag }}
 
-        command: ["/bin/bash"]
-        args:
-          - -c
-          - >-
-              cd /data/fwapg &&
-              set -eux pipefail &&
-              export DATABASE_URL=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@{{ .Values.app_name }}-postgres-svc:5432/$POSTGRES_DB &&
-              make &&
-              sleep 60000
-        env:
-        - name: POSTGRES_USER
-          valueFrom:
-            secretKeyRef:
-              key: database-user
-              name: {{ .Values.postgresdb_params.database_secret_name }}
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              key: database-password
-              name: {{ .Values.postgresdb_params.database_secret_name }}
-        - name: POSTGRES_DB
-          valueFrom:
-            secretKeyRef:
-              key: database-name
-              name: {{ .Values.postgresdb_params.database_secret_name }}
-        - name: OBJECTSTORE_BUCKET
-          valueFrom:
-            secretKeyRef:
-              key: OBJECTSTORE_BUCKET
-              name: {{ .Values.objectstorage.secret_name }}
-        - name: OBJECTSTORE_HOST
-          valueFrom:
-            secretKeyRef:
-              key: OBJECTSTORE_HOST
-              name: {{ .Values.objectstorage.secret_name }}
-        - name: OBJECTSTORE_ID
-          valueFrom:
-            secretKeyRef:
-              key: OBJECTSTORE_ID
-              name: {{ .Values.objectstorage.secret_name }}
-        - name: OBJECTSTORE_SECRET
-          valueFrom:
-            secretKeyRef:
-              key: OBJECTSTORE_SECRET
-              name: {{ .Values.objectstorage.secret_name }}
-
-      restartPolicy: Never
+            # artifacts.developer.gov.bc.ca/docker-remote/guylafleur/gdal-util:{{ .Values.dataloadjob.imagetag }}
+            # docker pull guylafleur/gdal-util:20220309-0101
+            # docker pull
+            #Calling the shell script that was pulled by the init container
+            # link to article showing how to call multiple commands in single
+            # call: https://stackoverflow.com/questions/33979501/kubernetes-passing-multiple-commands-to-the-container
+            volumeMounts:
+            - name: dataload-volume
+              mountPath: /data
+            command: ["/bin/bash"]
+            args:
+              - -c
+              - >-
+                  sleep 10 &&
+                  cp -R /home/fwapg* /data/. &&
+                  cd /data/fwapg &&
+                  set -eux pipefail &&
+                  export DATABASE_URL=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@{{ .Values.app_name }}-postgres-svc:5432/$POSTGRES_DB &&
+                  ## make &&
+                  rm .make/fwapg.fwa_stream_networks_sp &&
+                  make .make/whse_basemapping.fwa_stream_networks_sp &&
+                  sleep 30000
+            env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  key: database-user
+                  name: {{ .Values.postgresdb_params.database_secret_name }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: database-password
+                  name: {{ .Values.postgresdb_params.database_secret_name }}
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  key: database-name
+                  name: {{ .Values.postgresdb_params.database_secret_name }}
+            - name: OBJECTSTORE_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  key: OBJECTSTORE_BUCKET
+                  name: {{ .Values.objectstorage.secret_name }}
+            - name: OBJECTSTORE_HOST
+              valueFrom:
+                secretKeyRef:
+                  key: OBJECTSTORE_HOST
+                  name: {{ .Values.objectstorage.secret_name }}
+            - name: OBJECTSTORE_ID
+              valueFrom:
+                secretKeyRef:
+                  key: OBJECTSTORE_ID
+                  name: {{ .Values.objectstorage.secret_name }}
+            - name: OBJECTSTORE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: OBJECTSTORE_SECRET
+                  name: {{ .Values.objectstorage.secret_name }}
+          restartPolicy: Never

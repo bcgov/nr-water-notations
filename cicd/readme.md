@@ -14,7 +14,6 @@ Steps outlined [here](https://developer.gov.bc.ca/Artifact-Repositories-(Artifac
 oc process -f https://raw.githubusercontent.com/bcgov/platform-services-archeobot/master/archeobot/config/samples/tmpl-artifactoryserviceaccount.yaml -p NAME="artifact" -p DESCRIPTOR="artifactory service account" | oc create -f -
 ```
 
-
 ## Deployment
 
 Deploy the helm chart, the postgres/gis image is comming from dockerhub, with
@@ -31,15 +30,44 @@ Changes to:
 artifacts.developer.gov.bc.ca/docker-remote/postgis/postgis:14-3.2-alpine
 ```
 
+### Deploy helm chart
+
 ```
 cd cicd
 helm upgrade --install water-notations water-notations
 ```
 
+### Manually trigger job
+
+`oc create job  "dataload-manual-$(date +%s)" --from=cronjob/dataload`
+
+
+`oc create job  temp-dataload-1 --from=cronjob/dataload`
+
+
 # Background Information
 
-postgres/gis image:
+### postgres/gis image:
 https://registry.hub.docker.com/r/postgis/postgis
+
+### Data Loading job
+
+* defined in the helm chart in the cicd directory (dataloadjob.yaml)
+* schedule is currently set to run at midnight
+* source repository for the image: https://github.com/franTarkenton/fwapg
+* source image: https://hub.docker.com/repository/docker/guylafleur/gdal-util
+
+### Water Notations Analysis
+
+* defined in the helm chart in the cicd directory (notationsjob.yaml)
+* schedule is currently set to run at noon
+* source repository for the image: https://github.com/smnorris/fwapg
+* source image: https://hub.docker.com/repository/docker/snorris75/gdal-util
+
+
+
+
+
 
 
 # Working with Postgres/gis

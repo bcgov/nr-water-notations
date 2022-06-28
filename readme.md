@@ -40,12 +40,12 @@ cd cicd
 helm upgrade --install water-notations water-notations
 ```
 
-
 # Troubleshooting make file / load
 
 * run the helm chart
 * get a list of the pods and identify the one that is running called dataload-something
 * login and do the debugging
+
 `oc rsh <pod name>`
 
 

@@ -110,7 +110,7 @@ demojob:
 
 dataloadjob:
   job_name: dataload
-  imagetag: 20220425-2314
+  imagetag: 20220621-1650
 
 notationsjob:
   job_name: notations
