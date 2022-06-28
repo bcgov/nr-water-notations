@@ -2,3 +2,5 @@
 cicd/water-notations/junk.txt
 junk*
 venv
+tmp/
+logs/

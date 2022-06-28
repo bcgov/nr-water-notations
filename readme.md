@@ -12,7 +12,7 @@ The analysis runs in openshift and does the following:
 * check for changes to FWA data on object store on a scheduled basis
 * if FWA data has changed, reload the `fwapg` database to openshift
 * download notation points on scheduled basis, check for changes
-* if change to notations is detected, injest notations into the `fwapg` database, 
+* if change to notations is detected, injest notations into the `fwapg` database,
 run the analysis, export to file and copy output .gpkg to object store
 
 On DataBC side:
@@ -47,3 +47,68 @@ helm upgrade --install water-notations water-notations
 * get a list of the pods and identify the one that is running called dataload-something
 * login and do the debugging
 `oc rsh <pod name>`
+
+
+### Deploy helm chart
+
+```
+cd cicd
+helm upgrade --install water-notations water-notations
+```
+
+### Manually trigger job
+
+`oc create job  "dataload-manual-$(date +%s)" --from=cronjob/dataload`
+
+
+`oc create job  temp-dataload-1 --from=cronjob/dataload`
+
+
+# Background Information
+
+### postgres/gis image:
+https://registry.hub.docker.com/r/postgis/postgis
+
+### Data Loading job
+
+* defined in the helm chart in the cicd directory (dataloadjob.yaml)
+* schedule is currently set to run at midnight
+* source repository for the image: https://github.com/franTarkenton/fwapg
+* source image: https://hub.docker.com/repository/docker/guylafleur/gdal-util
+
+### Water Notations Analysis
+
+* defined in the helm chart in the cicd directory (notationsjob.yaml)
+* schedule is currently set to run at noon
+* source repository for the image: https://github.com/smnorris/fwapg
+* source image: https://hub.docker.com/repository/docker/snorris75/gdal-util
+
+
+
+
+
+
+
+# Working with Postgres/gis
+
+set up port forwarding:
+
+`oc get pods`
+
+find the pod name that is running postgres/gis.  Likely starts with waternote-postgres-blahblah
+
+`oc port-forward <pod name> 5432:5432`
+
+login to database after port forwarding is set up:
+
+`psql <db name> -U <db user> -h 0.0.0.0`
+
+# Automate Data Load
+
+Created the dataload job that loads the data using the Makefile in this repo:
+https://github.com/franTarkenton/fwapg
+
+## todo:
+* stream
+
+
