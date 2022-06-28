@@ -12,7 +12,7 @@ The analysis runs in openshift and does the following:
 * check for changes to FWA data on object store on a scheduled basis
 * if FWA data has changed, reload the `fwapg` database to openshift
 * download notation points on scheduled basis, check for changes
-* if change to notations is detected, injest notations into the `fwapg` database, 
+* if change to notations is detected, injest notations into the `fwapg` database,
 run the analysis, export to file and copy output .gpkg to object store
 
 On DataBC side:
@@ -40,10 +40,10 @@ cd cicd
 helm upgrade --install water-notations water-notations
 ```
 
-
 # Troubleshooting make file / load
 
 * run the helm chart
 * get a list of the pods and identify the one that is running called dataload-something
 * login and do the debugging
+
 `oc rsh <pod name>`
