@@ -20,6 +20,20 @@ On DataBC side:
 * an FMW will run daily monitoring the streams notation layer.  If it has
   changed it will be injested into the BCGW oracle database.
 
+This repo only contains the helm chart that deploys the database, and the
+cronjobs to openshift.  The code that is used to perform the dataload and the
+waternotations analysis is all stored in the fwapg repo:
+https://github.com/franTarkenton/fwapg
+
+The [fwapg](https://github.com/franTarkenton/fwapg) contains a github action
+that will build an image and upload it to dockerhub:
+
+https://hub.docker.com/repository/docker/guylafleur/gdal-util
+
+The [fwapg](https://github.com/franTarkenton/fwapg) repo is a fork of simon's
+fwapg repo.  Its a merge of the version tag
+[0.1.2](https://github.com/smnorris/fwapg/releases/tag/v0.1.2)
+
 # Technical Details
 
 ## Database / Cronjob Deployments
