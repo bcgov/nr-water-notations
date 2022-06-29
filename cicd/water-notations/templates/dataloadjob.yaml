@@ -16,7 +16,7 @@ spec:
           volumes:
           - name: dataload-volume
             persistentVolumeClaim:
-              claimName: {{ .Values.demojob.demojob_pvc_name }}
+              claimName: {{ .Values.dataloadjob.dataload_pvc_name }}
           containers:
           - name: demogdal
             resources:
@@ -35,6 +35,7 @@ spec:
             - name: dataload-volume
               mountPath: /data
             command: ["/bin/bash"]
+            #  make &&
             args:
               - -c
               - >-
@@ -43,9 +44,9 @@ spec:
                   cd /data/fwapg &&
                   set -eux pipefail &&
                   export DATABASE_URL=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@{{ .Values.app_name }}-postgres-svc:5432/$POSTGRES_DB &&
-                  ## make &&
-                  rm .make/fwapg.fwa_stream_networks_sp &&
-                  make .make/whse_basemapping.fwa_stream_networks_sp &&
+                  fwatmpfile=.make/fwapg.fwa_stream_networks_sp &&
+                  if [ -f $fwatmpfile ]; then rm .make/fwapg.fwa_stream_networks_sp; fi &&
+                  make .make/fwa_stream_networks_sp &&
                   sleep 30000
             env:
             - name: POSTGRES_USER

@@ -5,7 +5,7 @@ metadata:
     volume.beta.kubernetes.io/storage-provisioner: csi.trident.netapp.io
   finalizers:
   - kubernetes.io/pvc-protection
-  name: {{ .Values.demojob.demojob_pvc_name }}
+  name: {{ .Values.dataloadjob.dataload_pvc_name }}
   finalizers:
     - kubernetes.io/pvc-protection
 spec:
@@ -13,6 +13,6 @@ spec:
     - ReadWriteMany
   resources:
     requests:
-      storage: {{ .Values.demojob.demojob_pvc_size }}
+      storage: {{ .Values.dataloadjob.dataload_pvc_size }}
   storageClassName: netapp-file-standard
   volumeMode: Filesystem

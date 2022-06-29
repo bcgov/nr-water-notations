@@ -13,7 +13,7 @@ The analysis runs in openshift and does the following:
 * if FWA data has changed, reload the `fwapg` database to openshift
 * download notation points on scheduled basis, check for changes
 * if change to notations is detected, injest notations into the `fwapg` database,
-run the analysis, export to file and copy output .gpkg to object store
+  run the analysis, export to file and copy output .gpkg to object store
 
 On DataBC side:
 
@@ -33,6 +33,7 @@ Deploying the helm chart will create the following components:
 * a cron job that executes daily that will update the stream notation data
   if any of the input data has changed.
 
+
 to run deployment
 
 ```
@@ -46,8 +47,12 @@ helm upgrade --install water-notations water-notations
 * get a list of the pods and identify the one that is running called dataload-something
 * login and do the debugging
 
-`oc rsh <pod name>`
-
+```
+# list pods
+oc get pods
+# login to pod
+oc rsh <pod name>
+```
 
 ### Deploy helm chart
 
@@ -58,11 +63,11 @@ helm upgrade --install water-notations water-notations
 
 ### Manually trigger job
 
+* Trigger the Dataload:
 `oc create job  "dataload-manual-$(date +%s)" --from=cronjob/dataload`
 
-
-`oc create job  temp-dataload-1 --from=cronjob/dataload`
-
+Trigger the stream notation analysis:
+`oc create job "notations-manual-$(date +%s)" --from=cronjob/notations`
 
 # Background Information
 
@@ -83,12 +88,6 @@ https://registry.hub.docker.com/r/postgis/postgis
 * source repository for the image: https://github.com/smnorris/fwapg
 * source image: https://hub.docker.com/repository/docker/snorris75/gdal-util
 
-
-
-
-
-
-
 # Working with Postgres/gis
 
 set up port forwarding:
@@ -107,8 +106,4 @@ login to database after port forwarding is set up:
 
 Created the dataload job that loads the data using the Makefile in this repo:
 https://github.com/franTarkenton/fwapg
-
-## todo:
-* stream
-
 
