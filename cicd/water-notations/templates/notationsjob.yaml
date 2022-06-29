@@ -16,7 +16,7 @@ spec:
           volumes:
           - name: dataload-volume
             persistentVolumeClaim:
-              claimName: {{ .Values.demojob.demojob_pvc_name }}
+              claimName: {{ .Values.dataloadjob.dataload_pvc_name }}
           containers:
           - name: water-notations-analysis
             resources:
@@ -75,5 +75,4 @@ spec:
                 secretKeyRef:
                   key: OBJECTSTORE_SECRET
                   name: {{ .Values.objectstorage.secret_name }}
-
           restartPolicy: Never

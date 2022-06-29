@@ -111,6 +111,8 @@ demojob:
 dataloadjob:
   job_name: dataload
   imagetag: 20220621-1650
+  dataload_pvc_name: dataload-pvc
+  dataload_pvc_size: "30Gi"
 
 notationsjob:
   job_name: notations

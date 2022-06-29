@@ -1,9 +1,12 @@
+# utility job used to help with debugging database
+# and other issues
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: demo-job
 spec:
   ttlSecondsAfterFinished: 100
+  suspend: true
   template:
     spec:
       imagePullSecrets:
@@ -12,7 +15,7 @@ spec:
       - name: demojob-volume
         persistentVolumeClaim:
         #  claimName: {{ .Values.postgresdb_params.database_pvc_name }}
-          claimName: {{ .Values.demojob.demojob_pvc_name }}
+          claimName: {{ .Values.dataloadjob.dataload_pvc_name }}
       containers:
       - name: demogdal
         image: >-
