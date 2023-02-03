@@ -44,8 +44,8 @@ spec:
                   cd /data/fwapg &&
                   set -eux pipefail &&
                   export DATABASE_URL=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@{{ .Values.app_name }}-postgres-svc:5432/$POSTGRES_DB &&
-                  fwatmpfile=.make/fwapg.fwa_stream_networks_sp &&
-                  if [ -f $fwatmpfile ]; then rm .make/fwapg.fwa_stream_networks_sp; fi &&
+                  fwatmpfile=.make/fwa_stream_networks_sp &&
+                  if [ -f $fwatmpfile ]; then rm .make/fwa_stream_networks_sp; fi &&
                   make .make/fwa_stream_networks_sp &&
                   sleep 30000
             env:
