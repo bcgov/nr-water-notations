@@ -1,76 +1,78 @@
 apiVersion: batch/v1
-kind: Job
+kind: CronJob
 metadata:
   name: {{ .Values.notationsjob.job_name }}
 spec:
-  ttlSecondsAfterFinished: 100
-  suspend: true
-
-  template:
+  #ttlSecondsAfterFinished: 100
+  suspend: false
+  # every day at noon
+  schedule: "0 12 * * *"
+  jobTemplate:
     spec:
-      imagePullSecrets:
-        - name: {{ .Values.artifactory_secret_name }}
-      volumes:
-      - name: dataload-volume
-        persistentVolumeClaim:
-          claimName: {{ .Values.demojob.demojob_pvc_name }}
-      containers:
-      - name: demogdal
-        resources:
-          requests:
-            cpu: 100m
-        image: >-
-          artifacts.developer.gov.bc.ca/docker-remote/snorris75/gdal-util:{{ .Values.notationsjob.imagetag }}
-        volumeMounts:
-        - name: dataload-volume
-          mountPath: /data
-        command: ["/bin/bash"]
-        args:
-          - -c
-          - >-
-              cd /data &&
-              rm -rf nr-water-notations &&
-              git clone https://github.com/bcgov/nr-water-notations.git &&
-              cd nr-water-notations/jobs &&
-              export DATABASE_URL=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@{{ .Values.app_name }}-postgres-svc:5432/$POSTGRES_DB &&
-              export BCDATA_CACHE=/data/.bcdata &&
-              ./waternote.sh &&
-              sleep 60000
-        env:
-        - name: POSTGRES_USER
-          valueFrom:
-            secretKeyRef:
-              key: database-user
-              name: {{ .Values.postgresdb_params.database_secret_name }}
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              key: database-password
-              name: {{ .Values.postgresdb_params.database_secret_name }}
-        - name: POSTGRES_DB
-          valueFrom:
-            secretKeyRef:
-              key: database-name
-              name: {{ .Values.postgresdb_params.database_secret_name }}
-        - name: OBJECTSTORE_BUCKET
-          valueFrom:
-            secretKeyRef:
-              key: OBJECTSTORE_BUCKET
-              name: {{ .Values.objectstorage.secret_name }}
-        - name: OBJECTSTORE_HOST
-          valueFrom:
-            secretKeyRef:
-              key: OBJECTSTORE_HOST
-              name: {{ .Values.objectstorage.secret_name }}
-        - name: OBJECTSTORE_ID
-          valueFrom:
-            secretKeyRef:
-              key: OBJECTSTORE_ID
-              name: {{ .Values.objectstorage.secret_name }}
-        - name: OBJECTSTORE_SECRET
-          valueFrom:
-            secretKeyRef:
-              key: OBJECTSTORE_SECRET
-              name: {{ .Values.objectstorage.secret_name }}
-
-      restartPolicy: Never
+      template:
+        spec:
+          imagePullSecrets:
+            - name: {{ .Values.artifactory_secret_name }}
+          volumes:
+          - name: dataload-volume
+            persistentVolumeClaim:
+              claimName: {{ .Values.dataloadjob.dataload_pvc_name }}
+          containers:
+          - name: water-notations-analysis
+            resources:
+              requests:
+                cpu: 100m
+            image: >-
+              artifacts.developer.gov.bc.ca/docker-remote/snorris75/gdal-util:{{ .Values.notationsjob.imagetag }}
+            volumeMounts:
+            - name: dataload-volume
+              mountPath: /data
+            command: ["/bin/bash"]
+            args:
+              - -c
+              - >-
+                  cd /data &&
+                  rm -rf nr-water-notations &&
+                  git clone https://github.com/bcgov/nr-water-notations.git &&
+                  cd nr-water-notations/jobs &&
+                  export DATABASE_URL=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@{{ .Values.app_name }}-postgres-svc:5432/$POSTGRES_DB &&
+                  export BCDATA_CACHE=/data/.bcdata &&
+                  ./waternote.sh &&
+                  sleep 30000
+            env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  key: database-user
+                  name: {{ .Values.postgresdb_params.database_secret_name }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: database-password
+                  name: {{ .Values.postgresdb_params.database_secret_name }}
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  key: database-name
+                  name: {{ .Values.postgresdb_params.database_secret_name }}
+            - name: OBJECTSTORE_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  key: OBJECTSTORE_BUCKET
+                  name: {{ .Values.objectstorage.secret_name }}
+            - name: OBJECTSTORE_HOST
+              valueFrom:
+                secretKeyRef:
+                  key: OBJECTSTORE_HOST
+                  name: {{ .Values.objectstorage.secret_name }}
+            - name: OBJECTSTORE_ID
+              valueFrom:
+                secretKeyRef:
+                  key: OBJECTSTORE_ID
+                  name: {{ .Values.objectstorage.secret_name }}
+            - name: OBJECTSTORE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: OBJECTSTORE_SECRET
+                  name: {{ .Values.objectstorage.secret_name }}
+          restartPolicy: Never
