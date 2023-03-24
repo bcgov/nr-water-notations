@@ -110,7 +110,7 @@ demojob:
 
 dataloadjob:
   job_name: dataload
-  imagetag: 20220628-2239
+  imagetag: 20230324-2232
   dataload_pvc_name: dataload-pvc
   dataload_pvc_size: "30Gi"
 

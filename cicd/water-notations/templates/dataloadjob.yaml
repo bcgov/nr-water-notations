@@ -24,13 +24,6 @@ spec:
                 cpu: 100m
             image: >-
               artifacts.developer.gov.bc.ca/docker-remote/guylafleur/gdal-util:{{ .Values.dataloadjob.imagetag }}
-
-            # artifacts.developer.gov.bc.ca/docker-remote/guylafleur/gdal-util:{{ .Values.dataloadjob.imagetag }}
-            # docker pull guylafleur/gdal-util:20220309-0101
-            # docker pull
-            #Calling the shell script that was pulled by the init container
-            # link to article showing how to call multiple commands in single
-            # call: https://stackoverflow.com/questions/33979501/kubernetes-passing-multiple-commands-to-the-container
             volumeMounts:
             - name: dataload-volume
               mountPath: /data
@@ -44,9 +37,8 @@ spec:
                   cd /data/fwapg &&
                   set -eux pipefail &&
                   export DATABASE_URL=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@{{ .Values.app_name }}-postgres-svc:5432/$POSTGRES_DB &&
-                  fwatmpfile=.make/fwa_stream_networks_sp &&
-                  if [ -f $fwatmpfile ]; then rm $fwatmpfile; fi &&
-                  make $fwatmpfile &&
+                  make clean_targets &&
+                  make all &&
                   sleep 30000
             env:
             - name: POSTGRES_USER
