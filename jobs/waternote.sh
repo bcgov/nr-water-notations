@@ -6,9 +6,6 @@ set -euxo pipefail
 # https://github.com/OSGeo/gdal/issues/4570
 DATABASE_URL_OGR=$DATABASE_URL?application_name=foo
 
-# clear out working schema
-psql $DATABASE_URL -c "create schema if not exists nr_water_notations"
-
 # clear out any old outputs
 rm -rf wls_water_notation_streams_sp.*
 rm -rf wls_water_notation_aquifers_sp.*
