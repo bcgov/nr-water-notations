@@ -7,7 +7,6 @@ set -euxo pipefail
 DATABASE_URL_OGR=$DATABASE_URL?application_name=foo
 
 # clear out working schema
-psql $DATABASE_URL -c "drop schema if exists nr_water_notations cascade"
 psql $DATABASE_URL -c "create schema if not exists nr_water_notations"
 
 # clear out any old outputs
