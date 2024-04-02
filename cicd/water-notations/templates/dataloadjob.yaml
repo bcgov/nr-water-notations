@@ -40,8 +40,7 @@ spec:
                   set -eux pipefail &&
                   export DATABASE_URL=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@{{ .Values.app_name }}-postgres-svc:5432/$POSTGRES_DB &&
                   make clean_targets &&
-                  make all &&
-                  sleep 30000
+                  make all
             env:
             - name: POSTGRES_USER
               valueFrom:
